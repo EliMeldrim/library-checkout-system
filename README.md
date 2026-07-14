@@ -62,8 +62,8 @@ The test project exercises the checkout/return/overdue business rules against EF
 
 ## Screenshots
 
-<!-- screenshot: dashboard -->
-<!-- screenshot: catalog -->
-<!-- screenshot: item-detail -->
-<!-- screenshot: member-detail -->
-<!-- screenshot: overdue-report -->
+![Catalog](docs/screenshots/catalog.png)
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+![Overdue report](docs/screenshots/overdue-report.png)
