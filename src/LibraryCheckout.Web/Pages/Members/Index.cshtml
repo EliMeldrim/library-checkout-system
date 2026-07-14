@@ -1,0 +1,55 @@
+@page
+@model LibraryCheckout.Web.Pages.Members.IndexModel
+@{
+    ViewData["Title"] = "Members";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="page-heading mb-0">Members</h1>
+    <a class="btn btn-library" asp-page="./Create">New Member</a>
+</div>
+
+<div class="card">
+    <div class="card-body table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th class="text-end">Active Loans</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var member in Model.Members)
+                {
+                    <tr>
+                        <td><a asp-page="./Details" asp-route-id="@member.Id">@member.Name</a></td>
+                        <td>@member.Email</td>
+                        <td>@member.JoinDate.ToString("MMM d, yyyy")</td>
+                        <td>
+                            @switch (member.Status)
+                            {
+                                case MemberStatus.Active:
+                                    <span class="badge bg-available">Active</span>
+                                    break;
+                                case MemberStatus.Suspended:
+                                    <span class="badge bg-unavailable">Suspended</span>
+                                    break;
+                                default:
+                                    <span class="badge bg-secondary">Lapsed</span>
+                                    break;
+                            }
+                        </td>
+                        <td class="text-end">@member.ActiveLoanCount</td>
+                        <td class="text-end">
+                            <a class="btn btn-sm btn-outline-secondary" asp-page="./Edit" asp-route-id="@member.Id">Edit</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

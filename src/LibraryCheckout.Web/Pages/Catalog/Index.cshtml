@@ -1,0 +1,73 @@
+@page
+@model LibraryCheckout.Web.Pages.Catalog.IndexModel
+@{
+    ViewData["Title"] = "Catalog";
+}
+
+<h1 class="page-heading">Catalog</h1>
+
+<form method="get" class="card mb-4">
+    <div class="card-body row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label" for="search">Search title or author/creator</label>
+            <input class="form-control" type="search" id="search" name="Search"
+                   value="@Model.Search" placeholder="e.g. Dune or Miyazaki" />
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="type">Type</label>
+            <select class="form-select" id="type" name="Type"
+                    asp-for="Type" asp-items="Html.GetEnumSelectList<ItemType>()">
+                <option value="">All types</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-library">Filter</button>
+            <a class="btn btn-outline-secondary" asp-page="./Index">Reset</a>
+        </div>
+    </div>
+</form>
+
+@if (Model.Items.Count == 0)
+{
+    <div class="alert alert-secondary">No items match your search.</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Type</th>
+                        <th>Author / Creator</th>
+                        <th>Year</th>
+                        <th class="text-end">Availability</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td><a asp-page="./Details" asp-route-id="@item.Id">@item.Title</a></td>
+                            <td><span class="badge bg-type">@item.Type.GetDisplayName()</span></td>
+                            <td>@item.Creator</td>
+                            <td>@item.Year</td>
+                            <td class="text-end">
+                                @if (item.CopiesAvailable > 0)
+                                {
+                                    <span class="badge bg-available">@item.CopiesAvailable of @item.CopiesOwned available</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-unavailable">0 of @item.CopiesOwned available</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-muted mt-2">@Model.Items.Count item(s)</p>
+}

@@ -1,0 +1,77 @@
+@page
+@model LibraryCheckout.Web.Pages.Reports.OverdueModel
+@{
+    ViewData["Title"] = "Overdue Report";
+}
+
+<h1 class="page-heading">Overdue Report</h1>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+@if (Model.Overdue.Count == 0)
+{
+    <div class="alert alert-success">Nothing is overdue. The shelves thank you.</div>
+}
+else
+{
+    <p class="text-muted">@Model.Overdue.Count overdue loan(s). Click a column heading to sort.</p>
+    <div class="card">
+        <div class="card-body table-responsive">
+            <table class="table align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>
+                            <a class="sort-link" asp-page="./Overdue" asp-route-sort="title" asp-route-dir="@Model.NextDir("title")">
+                                Item@(Model.SortIndicator("title"))
+                            </a>
+                        </th>
+                        <th>
+                            <a class="sort-link" asp-page="./Overdue" asp-route-sort="member" asp-route-dir="@Model.NextDir("member")">
+                                Member@(Model.SortIndicator("member"))
+                            </a>
+                        </th>
+                        <th>Checked Out</th>
+                        <th>
+                            <a class="sort-link" asp-page="./Overdue" asp-route-sort="due" asp-route-dir="@Model.NextDir("due")">
+                                Due Date@(Model.SortIndicator("due"))
+                            </a>
+                        </th>
+                        <th class="text-end">
+                            <a class="sort-link" asp-page="./Overdue" asp-route-sort="days" asp-route-dir="@Model.NextDir("days")">
+                                Days Overdue@(Model.SortIndicator("days"))
+                            </a>
+                        </th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var entry in Model.Overdue)
+                    {
+                        <tr class="overdue-row">
+                            <td><a asp-page="/Catalog/Details" asp-route-id="@entry.Loan.ItemId">@entry.Loan.Item.Title</a></td>
+                            <td><a asp-page="/Members/Details" asp-route-id="@entry.Loan.MemberId">@entry.Loan.Member.Name</a></td>
+                            <td>@entry.Loan.CheckedOutDate.ToString("MMM d, yyyy")</td>
+                            <td>@entry.Loan.DueDate.ToString("MMM d, yyyy")</td>
+                            <td class="text-end"><strong>@entry.DaysOverdue</strong></td>
+                            <td class="text-end">
+                                <form method="post" asp-page-handler="Return"
+                                      asp-route-loanId="@entry.Loan.Id"
+                                      asp-route-sort="@Model.Sort" asp-route-dir="@Model.Dir">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Return</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}

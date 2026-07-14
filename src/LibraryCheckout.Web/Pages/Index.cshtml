@@ -1,0 +1,95 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<h1 class="page-heading">Dashboard</h1>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <a asp-page="/Catalog/Index">
+                    <div class="stat-value">@Model.ItemCount</div>
+                    <div class="stat-label">Catalog Items</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <a asp-page="/Members/Index">
+                    <div class="stat-value">@Model.MemberCount</div>
+                    <div class="stat-label">Members</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card h-100">
+            <div class="card-body">
+                <a asp-page="/Loans/Index">
+                    <div class="stat-value">@Model.ActiveLoanCount</div>
+                    <div class="stat-label">Active Loans</div>
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card stat-danger h-100">
+            <div class="card-body">
+                <a asp-page="/Reports/Overdue">
+                    <div class="stat-value">@Model.OverdueCount</div>
+                    <div class="stat-label">Overdue</div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="h5 card-title mb-3">Recent Activity</h2>
+        @if (Model.RecentActivity.Count == 0)
+        {
+            <p class="text-muted mb-0">No circulation activity yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Event</th>
+                            <th>Item</th>
+                            <th>Member</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var entry in Model.RecentActivity)
+                        {
+                            <tr>
+                                <td>@entry.Date.ToString("MMM d, yyyy")</td>
+                                <td>
+                                    @if (entry.Kind == "Returned")
+                                    {
+                                        <span class="badge bg-available">Returned</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-type">Checked out</span>
+                                    }
+                                </td>
+                                <td><a asp-page="/Catalog/Details" asp-route-id="@entry.ItemId">@entry.ItemTitle</a></td>
+                                <td><a asp-page="/Members/Details" asp-route-id="@entry.MemberId">@entry.MemberName</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

@@ -1,0 +1,146 @@
+@page "{id:int}"
+@model LibraryCheckout.Web.Pages.Catalog.DetailsModel
+@{
+    ViewData["Title"] = Model.Item.Title;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-page="./Index">Catalog</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Item.Title</li>
+    </ol>
+</nav>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card h-100">
+            <div class="card-body">
+                <h1 class="h3">@Model.Item.Title</h1>
+                <p class="mb-1">
+                    <span class="badge bg-type">@Model.Item.Type.GetDisplayName()</span>
+                    @if (Model.CopiesAvailable > 0)
+                    {
+                        <span class="badge bg-available">@Model.CopiesAvailable of @Model.Item.CopiesOwned available</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-unavailable">All @Model.Item.CopiesOwned copies checked out</span>
+                    }
+                </p>
+                <dl class="row mt-3 mb-0">
+                    <dt class="col-sm-4">Author / Creator</dt>
+                    <dd class="col-sm-8">@Model.Item.Creator</dd>
+                    <dt class="col-sm-4">ISBN / Identifier</dt>
+                    <dd class="col-sm-8">@(Model.Item.Identifier ?? "—")</dd>
+                    <dt class="col-sm-4">Year</dt>
+                    <dd class="col-sm-8">@Model.Item.Year</dd>
+                    <dt class="col-sm-4">Copies Owned</dt>
+                    <dd class="col-sm-8">@Model.Item.CopiesOwned</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card h-100">
+            <div class="card-body">
+                <h2 class="h5 card-title">Check Out</h2>
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                @if (Model.CopiesAvailable > 0)
+                {
+                    <form method="post" asp-page-handler="Checkout" asp-route-id="@Model.Item.Id">
+                        <div class="mb-3">
+                            <label class="form-label" asp-for="SelectedMemberId">Member</label>
+                            <select class="form-select" asp-for="SelectedMemberId" asp-items="Model.MemberOptions">
+                                <option value="">Select a member...</option>
+                            </select>
+                            <span asp-validation-for="SelectedMemberId" class="text-danger"></span>
+                        </div>
+                        <button type="submit" class="btn btn-library">
+                            Check out (due in @LoanPolicy.LoanPeriodDays days)
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">
+                        No copies are currently available. Return a copy below to make one available.
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <h2 class="h5 card-title mb-3">Loan History</h2>
+        @if (Model.Loans.Count == 0)
+        {
+            <p class="text-muted mb-0">This item has never been checked out.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Checked Out</th>
+                            <th>Due</th>
+                            <th>Returned</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.Loans)
+                        {
+                            <tr class="@(loan.IsOverdueAsOf(Model.Today) ? "overdue-row" : null)">
+                                <td><a asp-page="/Members/Details" asp-route-id="@loan.MemberId">@loan.Member.Name</a></td>
+                                <td>@loan.CheckedOutDate.ToString("MMM d, yyyy")</td>
+                                <td>@loan.DueDate.ToString("MMM d, yyyy")</td>
+                                <td>@(loan.ReturnedDate?.ToString("MMM d, yyyy") ?? "—")</td>
+                                <td>
+                                    @if (loan.IsOverdueAsOf(Model.Today))
+                                    {
+                                        <span class="badge bg-unavailable">@loan.DaysOverdueAsOf(Model.Today) day(s) overdue</span>
+                                    }
+                                    else if (loan.IsActive)
+                                    {
+                                        <span class="badge bg-type">On loan</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-available">Returned</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    @if (loan.IsActive)
+                                    {
+                                        <form method="post" asp-page-handler="Return"
+                                              asp-route-id="@Model.Item.Id" asp-route-loanId="@loan.Id">
+                                            <button type="submit" class="btn btn-sm btn-outline-secondary">Return</button>
+                                        </form>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

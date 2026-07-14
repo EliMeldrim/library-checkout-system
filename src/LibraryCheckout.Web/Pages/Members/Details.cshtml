@@ -1,0 +1,132 @@
+@page "{id:int}"
+@model LibraryCheckout.Web.Pages.Members.DetailsModel
+@{
+    ViewData["Title"] = Model.Member.Name;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-page="./Index">Members</a></li>
+        <li class="breadcrumb-item active" aria-current="page">@Model.Member.Name</li>
+    </ol>
+</nav>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h1 class="page-heading">@Model.Member.Name</h1>
+        <p class="mb-0">
+            @switch (Model.Member.Status)
+            {
+                case MemberStatus.Active:
+                    <span class="badge bg-available">Active</span>
+                    break;
+                case MemberStatus.Suspended:
+                    <span class="badge bg-unavailable">Suspended</span>
+                    break;
+                default:
+                    <span class="badge bg-secondary">Lapsed</span>
+                    break;
+            }
+            <span class="text-muted ms-2">@Model.Member.Email &middot; member since @Model.Member.JoinDate.ToString("MMM d, yyyy")</span>
+        </p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-page="./Edit" asp-route-id="@Model.Member.Id">Edit</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5 card-title mb-3">Current Loans (@Model.CurrentLoans.Count)</h2>
+        @if (Model.CurrentLoans.Count == 0)
+        {
+            <p class="text-muted mb-0">Nothing checked out right now.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Checked Out</th>
+                            <th>Due</th>
+                            <th>Status</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.CurrentLoans)
+                        {
+                            <tr class="@(loan.IsOverdueAsOf(Model.Today) ? "overdue-row" : null)">
+                                <td><a asp-page="/Catalog/Details" asp-route-id="@loan.ItemId">@loan.Item.Title</a></td>
+                                <td>@loan.CheckedOutDate.ToString("MMM d, yyyy")</td>
+                                <td>@loan.DueDate.ToString("MMM d, yyyy")</td>
+                                <td>
+                                    @if (loan.IsOverdueAsOf(Model.Today))
+                                    {
+                                        <span class="badge bg-unavailable">@loan.DaysOverdueAsOf(Model.Today) day(s) overdue</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-type">On loan</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form method="post" asp-page-handler="Return"
+                                          asp-route-id="@Model.Member.Id" asp-route-loanId="@loan.Id">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Return</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <h2 class="h5 card-title mb-3">Loan History (@Model.PastLoans.Count)</h2>
+        @if (Model.PastLoans.Count == 0)
+        {
+            <p class="text-muted mb-0">No returned loans yet.</p>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th>Checked Out</th>
+                            <th>Due</th>
+                            <th>Returned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var loan in Model.PastLoans)
+                        {
+                            <tr>
+                                <td><a asp-page="/Catalog/Details" asp-route-id="@loan.ItemId">@loan.Item.Title</a></td>
+                                <td>@loan.CheckedOutDate.ToString("MMM d, yyyy")</td>
+                                <td>@loan.DueDate.ToString("MMM d, yyyy")</td>
+                                <td>@loan.ReturnedDate?.ToString("MMM d, yyyy")</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>

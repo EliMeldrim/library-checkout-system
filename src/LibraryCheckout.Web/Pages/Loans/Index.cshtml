@@ -1,0 +1,87 @@
+@page
+@model LibraryCheckout.Web.Pages.Loans.IndexModel
+@{
+    ViewData["Title"] = "Loans";
+
+    string TabClass(string value) => Model.Filter == value ? "nav-link active" : "nav-link";
+}
+
+<h1 class="page-heading">Loans</h1>
+
+@if (!string.IsNullOrEmpty(Model.StatusMessage))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Model.StatusMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+<ul class="nav nav-tabs mb-3">
+    <li class="nav-item"><a class="@TabClass("active")" asp-page="./Index" asp-route-filter="active">Active</a></li>
+    <li class="nav-item"><a class="@TabClass("overdue")" asp-page="./Index" asp-route-filter="overdue">Overdue</a></li>
+    <li class="nav-item"><a class="@TabClass("returned")" asp-page="./Index" asp-route-filter="returned">Returned</a></li>
+    <li class="nav-item"><a class="@TabClass("all")" asp-page="./Index" asp-route-filter="all">All</a></li>
+</ul>
+
+@if (Model.Loans.Count == 0)
+{
+    <div class="alert alert-secondary">No loans in this view.</div>
+}
+else
+{
+    <div class="card">
+        <div class="card-body table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>Member</th>
+                        <th>Checked Out</th>
+                        <th>Due</th>
+                        <th>Returned</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var loan in Model.Loans)
+                    {
+                        <tr class="@(loan.IsOverdueAsOf(Model.Today) ? "overdue-row" : null)">
+                            <td><a asp-page="/Catalog/Details" asp-route-id="@loan.ItemId">@loan.Item.Title</a></td>
+                            <td><a asp-page="/Members/Details" asp-route-id="@loan.MemberId">@loan.Member.Name</a></td>
+                            <td>@loan.CheckedOutDate.ToString("MMM d, yyyy")</td>
+                            <td>@loan.DueDate.ToString("MMM d, yyyy")</td>
+                            <td>@(loan.ReturnedDate?.ToString("MMM d, yyyy") ?? "—")</td>
+                            <td>
+                                @if (loan.IsOverdueAsOf(Model.Today))
+                                {
+                                    <span class="badge bg-unavailable">@loan.DaysOverdueAsOf(Model.Today) day(s) overdue</span>
+                                }
+                                else if (loan.IsActive)
+                                {
+                                    <span class="badge bg-type">On loan</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-available">Returned</span>
+                                }
+                            </td>
+                            <td class="text-end">
+                                @if (loan.IsActive)
+                                {
+                                    <form method="post" asp-page-handler="Return"
+                                          asp-route-loanId="@loan.Id" asp-route-filter="@Model.Filter">
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Return</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <p class="text-muted mt-2">@Model.Loans.Count loan(s)</p>
+}
